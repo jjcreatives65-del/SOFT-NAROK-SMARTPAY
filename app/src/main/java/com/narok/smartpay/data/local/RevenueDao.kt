@@ -11,19 +11,22 @@ interface RevenueDao {
     @Query("SELECT * FROM revenue_items WHERE isFrequent = 1")
     fun getFrequentItems(): Flow<List<RevenueItem>>
 
-    @Query("SELECT * FROM revenue_items WHERE category = :category")
-    fun getItemsByCategory(category: String): Flow<List<RevenueItem>>
+    @Query("SELECT * FROM revenue_items WHERE subGroup = :subGroup")
+    fun getItemsBySubGroup(subGroup: String): Flow<List<RevenueItem>>
 
-    @Query("SELECT DISTINCT category FROM revenue_items")
-    fun getAllCategories(): Flow<List<String>>
+    @Query("SELECT DISTINCT subGroup FROM revenue_items")
+    fun getAllSubGroups(): Flow<List<String>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTransaction(transaction: RevenueTransaction)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertRevenueItem(item: RevenueItem)
+
     @Query("SELECT * FROM transactions WHERE syncStatus = 'PENDING'")
     suspend fun getPendingTransactions(): List<RevenueTransaction>
 
-    @Query("UPDATE transactions SET syncStatus = 'UPLOADED' WHERE transactionId IN (:ids)")
+    @Query("UPDATE transactions SET syncStatus = 'UPLOADED' WHERE receiptNo IN (:ids)")
     suspend fun markAsSynced(ids: List<String>)
 
     @Query("SELECT SUM(totalAmount) FROM transactions WHERE paymentMode = 'CASH' AND syncStatus = 'UPLOADED'")
@@ -34,4 +37,7 @@ interface RevenueDao {
 
     @Query("SELECT COUNT(*) FROM transactions WHERE syncStatus = 'PENDING'")
     fun getPendingCount(): Flow<Int>
+
+    @Query("SELECT * FROM transactions WHERE receiptNo = :receiptNo LIMIT 1")
+    fun getTransactionByReceiptNo(receiptNo: String): Flow<RevenueTransaction?>
 }
